@@ -139,7 +139,9 @@
     const SUPABASE_KEY = 'sb_publishable_ECWc7uCnjXjqT8v4JzLFSQ_FBAAddo1';
     
     // Supabase 클라이언트 초기화
-    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    // 라이브러리에서 createClient 함수를 명확히 가져온 후 초기화합니다.
+    const { createClient } = supabase;
+    const _supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
     let tempSchedule = [];
 
@@ -272,8 +274,10 @@
         }
     }
 
-    // 초기 실행: 페이지 로드 시 DB에서 이전 기록 가져오기
-    window.onload = loadHistory;
+    // 페이지 내용이 로드되면 즉시 DB에서 데이터를 가져오도록 설정합니다.
+    document.addEventListener('DOMContentLoaded', () => {
+    loadHistory();
+});
 
 </script>
 </body>
