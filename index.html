@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>안정성 시험 관리 시스템 v1.0</title>
+    <title>안정성 시험 관리 시스템 v1.1</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
     <style>
@@ -117,7 +117,7 @@
         <tbody></tbody>
     </table>
 
-    <div class="footer-version">Stability Management System v1.0 | Made by Doseok Hwang</div>
+    <div class="footer-version">Stability Management System v1.1 | Made by Doseok Hwang</div>
 </div>
 
 <div id="eventModal">
@@ -208,8 +208,26 @@
         refreshAll();
     }
 
-    async function deleteRow(id) {
-        if(confirm("정말 삭제하시겠습니까?")) { await _supabase.from('stability_tests').delete().eq('id', id); refreshAll(); }
+   async function deleteRow(id) {
+    // 1. 먼저 삭제 의사를 묻습니다.
+    if(!confirm("정말 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.")) return;
+
+    // 2. 관리자 비밀번호를 입력받습니다. (예: 1234)
+    const adminPassword = "Dsiscool86!"; // 여기에 실제 사용할 비밀번호를 입력하세요.
+    const userInput = prompt("삭제 권한 확인이 필요합니다. 비밀번호를 입력해주세요.");
+
+    // 3. 비밀번호 일치 여부 확인
+    if (userInput === adminPassword) {
+        const { error } = await _supabase.from('stability_tests').delete().eq('id', id);
+        if (error) {
+            alert("삭제 중 오류가 발생했습니다: " + error.message);
+        } else {
+            alert("정상적으로 삭제되었습니다.");
+            refreshAll();
+        }
+    } else {
+        alert("비밀번호가 틀렸습니다. 삭제 권한이 없습니다.");
+    }
     }
 
     function refreshAll() { resetForm(); loadHistory(); calendar.refetchEvents(); }
