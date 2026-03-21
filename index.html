@@ -225,7 +225,7 @@
     // 3. DB 이력 불러오기 로직
     async function loadHistory() {
         const { data, error } = await _supabase
-            .from('stability_records')
+            .from('stability_tests')
             .select('*')
             .order('created_at', { ascending: false })
             .limit(10); // 최근 10개만 표시
