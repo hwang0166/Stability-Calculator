@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>안정성 시험 관리 시스템 v1.8.1</title>
+    <title>안정성 시험 관리 시스템 v1.8.2</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
     <style>
@@ -60,7 +60,7 @@
 </head>
 <body>
     <div class="container">
-        <h2>💊 안정성 시험 통합 관리 시스템 v1.8.1</h2>
+        <h2>💊 안정성 시험 통합 관리 시스템 v1.8.2</h2>
         <div class="dashboard">
             <div class="stat-card today"><h4>오늘의 시험</h4><div class="value" id="countToday">0</div></div>
             <div class="stat-card week"><h4>이번 주 시험 예정</h4><div class="value" id="countWeek">0</div></div>
@@ -137,7 +137,7 @@
             <tbody></tbody>
         </table>
     
-        <div class="footer-version">Stability Management System v1.8.1</div>
+        <div class="footer-version">Stability Management System v1.8.2</div>
     </div>
     
     <div id="eventModal">
@@ -172,7 +172,6 @@
     let calendar;
     let allHistoryData = []; 
 
-    // [기존 함수들 유지]
     document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('deviationBaseDate').valueAsDate = new Date();
         calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
@@ -299,35 +298,25 @@
         refreshAll();
     }
 
-    // [보안 업데이트됨: deleteRow]
     async function deleteRow(id) {
         if(!confirm("삭제하시겠습니까?")) return;
         const inputPassword = prompt("관리자 비밀번호를 입력하세요.");
         if (!inputPassword) return;
-
         try {
-            // 서버 API 호출 (비밀번호 검증)
             const response = await fetch('/api/check-password', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ password: inputPassword })
             });
             const result = await response.json();
-
             if (result.success) {
                 await _supabase.from('stability_tests').delete().eq('id', id); 
                 alert("삭제 완료되었습니다.");
                 refreshAll(); 
-            } else {
-                alert("비밀번호가 일치하지 않습니다.");
-            }
-        } catch (e) {
-            console.error(e);
-            alert("보안 서버 통신 오류가 발생했습니다.");
-        }
+            } else { alert("비밀번호가 일치하지 않습니다."); }
+        } catch (e) { alert("보안 서버 통신 오류가 발생했습니다."); }
     }
 
-    // [기존 함수들 유지]
     async function showChamberDeviationHistory() {
         const chamber = document.getElementById('deviationChamberSelect').value;
         if(!chamber) return alert("조회할 챔버를 선택해주세요.");
@@ -392,9 +381,17 @@
             </tr>`).join('');
     }
 
+    // [수정된 부분: 챔버 필터링 로직 추가]
     function filterHistory() {
         const searchTxt = document.getElementById('searchInput').value.toLowerCase();
-        const filtered = allHistoryData.filter(item => (item.test_no.toLowerCase().includes(searchTxt) || item.product_name.toLowerCase().includes(searchTxt)));
+        const selectedChamber = document.getElementById('chamberFilter').value;
+
+        const filtered = allHistoryData.filter(item => {
+            const matchesSearch = item.test_no.toLowerCase().includes(searchTxt) || 
+                                 item.product_name.toLowerCase().includes(searchTxt);
+            const matchesChamber = selectedChamber === "" || item.chamber_no === selectedChamber;
+            return matchesSearch && matchesChamber;
+        });
         renderHistoryTable(filtered);
     }
 
