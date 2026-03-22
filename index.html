@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>안정성 시험 관리 시스템 v1.1</title>
+    <title>안정성 시험 관리 시스템 v1.2</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
     <style>
@@ -117,7 +117,7 @@
         <tbody></tbody>
     </table>
 
-    <div class="footer-version">Stability Management System v1.1 | Made by Doseok Hwang</div>
+    <div class="footer-version">Stability Management System v1.2 | Made by Doseok Hwang</div>
 </div>
 
 <div id="eventModal">
@@ -163,9 +163,15 @@
         data.forEach(item => {
             const intervalArray = item.intervals.split(',').map(i => i.trim());
             intervalArray.forEach(val => {
-                let v = parseInt(val); if(isNaN(v)) return;
+                let v = parseInt(val); 
+                if(isNaN(v)) return;
                 let d = new Date(item.start_date);
-                item.unit === 'month' ? d.setMonth(d.getMonth() + v) : d.setDate(d.getDate() + (v * 7));
+                  if (item.unit === 'month') {
+                d.setMonth(d.getMonth() + v);
+                d.setDate(d.getDate() - 1); // 시작일을 1로 계산하기 위해 하루 줄임
+                } else {
+                d.setDate(d.getDate() + (v * 7));
+                }
                 const dateStr = d.toISOString().split('T')[0];
                 const point = v === 0 ? 'Initial' : v + (item.unit === 'month' ? 'M' : 'W');
                 events.push({
