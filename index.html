@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>안정성 시험 관리 시스템 v1.8.0</title>
+    <title>안정성 시험 관리 시스템 v1.8.1</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
     <style>
@@ -59,110 +59,108 @@
     </style>
 </head>
 <body>
-
-<div class="container">
-    <h2>💊 안정성 시험 통합 관리 시스템 v1.8.0</h2>
-
-    <div class="dashboard">
-        <div class="stat-card today"><h4>오늘의 시험</h4><div class="value" id="countToday">0</div></div>
-        <div class="stat-card week"><h4>이번 주 시험 예정</h4><div class="value" id="countWeek">0</div></div>
-        <div class="stat-card total"><h4>전체 관리 배치</h4><div class="value" id="countTotal">0</div></div>
+    <div class="container">
+        <h2>💊 안정성 시험 통합 관리 시스템 v1.8.1</h2>
+        <div class="dashboard">
+            <div class="stat-card today"><h4>오늘의 시험</h4><div class="value" id="countToday">0</div></div>
+            <div class="stat-card week"><h4>이번 주 시험 예정</h4><div class="value" id="countWeek">0</div></div>
+            <div class="stat-card total"><h4>전체 관리 배치</h4><div class="value" id="countTotal">0</div></div>
+        </div>
+        
+        <div class="grid-form">
+            <div class="form-group"><label>시험 번호</label><input type="text" id="testNo" placeholder="예: 17ND01ST01"></div>
+            <div class="form-group">
+                <label>시험 조건</label>
+                <select id="category">
+                    <option value="장기">장기 (25°C ± 2°C/60%RH ± 5%RH)</option>
+                    <option value="가속">가속 (40°C ± 2°C/75%RH ± 5%RH)</option>
+                    <option value="가혹">가혹 (60°C ± 2°C/80%RH ± 5%RH)</option>
+                </select>
+            </div>
+            <div class="form-group"><label>제품명</label><input type="text" id="productName" placeholder="예: IN-115314정"></div>
+            <div class="form-group"><label>배치 번호</label><input type="text" id="batchNo" placeholder="예: 17ND01AST01-A"></div>
+            <div class="form-group"><label>챔버 번호</label><input type="text" id="chamberNo" placeholder="예: IB12"></div>
+            <div class="form-group"><label>시작일</label><input type="date" id="startDate"></div>
+            <div class="form-group">
+                <label>단위</label>
+                <select id="unit"><option value="month">개월(Month)</option><option value="week">주(Week)</option></select>
+            </div>
+            <div class="form-group full-width"><label>시험 시점 (쉼표 구분)</label><input type="text" id="intervals" placeholder="예: 0, 3, 6, 12"></div>
+        </div>
+    
+        <div class="btn-group">
+            <button class="btn-calc" onclick="calculate()">🔍 1. 일정 확인</button>
+            <button class="btn-save" id="mainActionBtn" onclick="handleMainAction()">💾 2. DB에 신규 등록하기</button>
+            <button id="cancelEditBtn" style="display:none; background:#999; color:white; flex:0.3;" onclick="resetForm()">취소</button>
+        </div>
+    
+        <div id="resultArea">
+            <div class="result-modal-content">
+                <h3><span id="resultTitle">📅 상세 정보 분석</span><button class="close-result-btn" onclick="closeResultArea()">닫기 ✕</button></h3>
+                <table id="calcTable">
+                    <thead>
+                        <tr id="calcTableHead">
+                            <th>안정성 시점</th>
+                            <th>시험 예정일(최초)</th>
+                            <th>변경 예정일(최종)</th>
+                            <th>연장일수</th>
+                            <th>일탈 사유</th>
+                            <th>일탈 시점</th>
+                            <th>등록</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    
+        <h3>🗓️ 월간 안정성 시험 일정</h3>
+        <div id="calendar"></div>
+    
+        <h3>📂 전체 등록 이력</h3>
+        <div class="filter-bar">
+            <div class="filter-group"><label>🔍 통합 검색</label><input type="text" id="searchInput" onkeyup="filterHistory()" placeholder="검색어를 입력하세요..."></div>
+            <div class="filter-group" style="max-width: 200px;"><label>🌡️ 챔버 필터</label><select id="chamberFilter" onchange="filterHistory()"><option value="">전체 챔버</option></select></div>
+        </div>
+    
+        <div class="filter-bar deviation-bar">
+            <div class="filter-group" style="max-width: 180px;"><label style="color: #c53030;">📅 일탈 발생일(기준)</label><input type="date" id="deviationBaseDate"></div>
+            <div class="filter-group"><label style="color: #c53030;">🌡️ 대상 챔버</label><select id="deviationChamberSelect"><option value="">대상 챔버 선택</option></select></div>
+            <button class="btn-check-history" onclick="showChamberDeviationHistory()">조회</button>
+            <div class="filter-group" style="max-width: 80px;"><label>연장(일)</label><input type="number" id="extendDaysInput" placeholder="0"></div>
+            <div class="filter-group"><label>일탈 사유</label><input type="text" id="deviationReason" placeholder="예: 정전 발생"></div>
+            <button class="btn-deviation" onclick="applyChamberDeviation()">일괄 연기 실행</button>
+        </div>
+    
+        <table id="historyTable">
+            <thead><tr><th>시험번호</th><th>조건</th><th>제품명</th><th>배치번호</th><th>챔버번호</th><th>시점(단위)</th><th>시작일</th><th>관리</th></tr></thead>
+            <tbody></tbody>
+        </table>
+    
+        <div class="footer-version">Stability Management System v1.8.1</div>
     </div>
     
-    <div class="grid-form">
-        <div class="form-group"><label>시험 번호</label><input type="text" id="testNo" placeholder="예: 17ND01ST01"></div>
-        <div class="form-group">
-            <label>시험 조건</label>
-            <select id="category">
-                <option value="장기">장기 (25°C ± 2°C/60%RH ± 5%RH)</option>
-                <option value="가속">가속 (40°C ± 2°C/75%RH ± 5%RH)</option>
-                <option value="가혹">가혹 (60°C ± 2°C/80%RH ± 5%RH)</option>
-            </select>
-        </div>
-        <div class="form-group"><label>제품명</label><input type="text" id="productName" placeholder="예: IN-115314정"></div>
-        <div class="form-group"><label>배치 번호</label><input type="text" id="batchNo" placeholder="예: 17ND01AST01-A"></div>
-        <div class="form-group"><label>챔버 번호</label><input type="text" id="chamberNo" placeholder="예: IB12"></div>
-        <div class="form-group"><label>시작일</label><input type="date" id="startDate"></div>
-        <div class="form-group">
-            <label>단위</label>
-            <select id="unit"><option value="month">개월(Month)</option><option value="week">주(Week)</option></select>
-        </div>
-        <div class="form-group full-width"><label>시험 시점 (쉼표 구분)</label><input type="text" id="intervals" placeholder="예: 0, 3, 6, 12"></div>
-    </div>
-
-    <div class="btn-group">
-        <button class="btn-calc" onclick="calculate()">🔍 1. 일정 확인</button>
-        <button class="btn-save" id="mainActionBtn" onclick="handleMainAction()">💾 2. DB에 신규 등록하기</button>
-        <button id="cancelEditBtn" style="display:none; background:#999; color:white; flex:0.3;" onclick="resetForm()">취소</button>
-    </div>
-
-    <div id="resultArea">
-        <div class="result-modal-content">
-            <h3><span id="resultTitle">📅 상세 정보 분석</span><button class="close-result-btn" onclick="closeResultArea()">닫기 ✕</button></h3>
-            <table id="calcTable">
-                <thead>
-                    <tr id="calcTableHead">
-                        <th>안정성 시점</th>
-                        <th>시험 예정일(최초)</th>
-                        <th>변경 예정일(최종)</th>
-                        <th>연장일수</th>
-                        <th>일탈 사유</th>
-                        <th>일탈 시점</th>
-                        <th>등록</th>
-                    </tr>
-                </thead>
-                <tbody></tbody>
-            </table>
-        </div>
-    </div>
-
-    <h3>🗓️ 월간 안정성 시험 일정</h3>
-    <div id="calendar"></div>
-
-    <h3>📂 전체 등록 이력</h3>
-    <div class="filter-bar">
-        <div class="filter-group"><label>🔍 통합 검색</label><input type="text" id="searchInput" onkeyup="filterHistory()" placeholder="검색어를 입력하세요..."></div>
-        <div class="filter-group" style="max-width: 200px;"><label>🌡️ 챔버 필터</label><select id="chamberFilter" onchange="filterHistory()"><option value="">전체 챔버</option></select></div>
-    </div>
-
-    <div class="filter-bar deviation-bar">
-        <div class="filter-group" style="max-width: 180px;"><label style="color: #c53030;">📅 일탈 발생일(기준)</label><input type="date" id="deviationBaseDate"></div>
-        <div class="filter-group"><label style="color: #c53030;">🌡️ 대상 챔버</label><select id="deviationChamberSelect"><option value="">대상 챔버 선택</option></select></div>
-        <button class="btn-check-history" onclick="showChamberDeviationHistory()">조회</button>
-        <div class="filter-group" style="max-width: 80px;"><label>연장(일)</label><input type="number" id="extendDaysInput" placeholder="0"></div>
-        <div class="filter-group"><label>일탈 사유</label><input type="text" id="deviationReason" placeholder="예: 정전 발생"></div>
-        <button class="btn-deviation" onclick="applyChamberDeviation()">일괄 연기 실행</button>
-    </div>
-
-    <table id="historyTable">
-        <thead><tr><th>시험번호</th><th>조건</th><th>제품명</th><th>배치번호</th><th>챔버번호</th><th>시점(단위)</th><th>시작일</th><th>관리</th></tr></thead>
-        <tbody></tbody>
-    </table>
-
-    <div class="footer-version">Stability Management System v1.8.0</div>
-</div>
-
-<div id="eventModal">
-    <div class="modal-content">
-        <span class="close-modal" onclick="closeModal()">&times;</span>
-        <div class="modal-header" id="m-category-title">상세 정보</div>
-        <div class="modal-body" id="modalBody">
-            <p><b>시험 종류:</b> <span id="m-category-text"></span></p>
-            <p><b>시험 번호:</b> <span id="m-testNo"></span></p>
-            <p><b>제품명:</b> <span id="m-product"></span></p>
-            <p><b>배치 번호:</b> <span id="m-batch"></span></p>
-            <p><b>현재 시점:</b> <span id="m-point"></span></p>
-            <p><b>전체 계획:</b> <span id="m-plan"></span></p>
-            <p><b>원래 계획일(최초):</b> <span id="m-original-date" style="color:#666;"></span></p>
-            <p><b>변경된 예정일(최종):</b> <span id="m-date" style="color:#d93025; font-weight:bold;"></span></p>
-            <p><b>챔버 번호:</b> <span id="m-chamber"></span></p>
-            <div id="m-delay-section" style="margin-top:15px; background:#fff5f5; padding:10px; border-radius:8px;">
-                <label style="color:#e53e3e; font-weight:bold; font-size:14px;">🚩 일탈 처리 이력</label>
-                <div id="m-delay-list" style="font-size:13px; margin-top:5px; color:#555;"></div>
+    <div id="eventModal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal()">&times;</span>
+            <div class="modal-header" id="m-category-title">상세 정보</div>
+            <div class="modal-body" id="modalBody">
+                <p><b>시험 종류:</b> <span id="m-category-text"></span></p>
+                <p><b>시험 번호:</b> <span id="m-testNo"></span></p>
+                <p><b>제품명:</b> <span id="m-product"></span></p>
+                <p><b>배치 번호:</b> <span id="m-batch"></span></p>
+                <p><b>현재 시점:</b> <span id="m-point"></span></p>
+                <p><b>전체 계획:</b> <span id="m-plan"></span></p>
+                <p><b>원래 계획일(최초):</b> <span id="m-original-date" style="color:#666;"></span></p>
+                <p><b>변경된 예정일(최종):</b> <span id="m-date" style="color:#d93025; font-weight:bold;"></span></p>
+                <p><b>챔버 번호:</b> <span id="m-chamber"></span></p>
+                <div id="m-delay-section" style="margin-top:15px; background:#fff5f5; padding:10px; border-radius:8px;">
+                    <label style="color:#e53e3e; font-weight:bold; font-size:14px;">🚩 일탈 처리 이력</label>
+                    <div id="m-delay-list" style="font-size:13px; margin-top:5px; color:#555;"></div>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
 <script>
     const SUPABASE_URL = 'https://ruqgzzwdygijphijvcpx.supabase.co';
@@ -174,6 +172,7 @@
     let calendar;
     let allHistoryData = []; 
 
+    // [기존 함수들 유지]
     document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('deviationBaseDate').valueAsDate = new Date();
         calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
@@ -191,7 +190,6 @@
         if (item.unit === 'month') { originalDate.setMonth(originalDate.getMonth() + v); } 
         else { originalDate.setDate(originalDate.getDate() + (v * 7)); }
         if (v !== 0) { originalDate.setDate(originalDate.getDate() - 1); }
-        
         const originalStr = originalDate.toISOString().split('T')[0];
         let totalDelay = 0; let reasons = [];
         if (item.deviation_history && Array.isArray(item.deviation_history)) {
@@ -246,10 +244,9 @@
         document.getElementById('m-batch').innerText = data.batch_no;
         document.getElementById('m-point').innerText = data.currentPoint;
         document.getElementById('m-plan').innerText = `${data.intervals} (${data.unit === 'month' ? '개월' : '주'})`;
-        document.getElementById('m-original-date').innerText = data.originalDate; // 추가됨
-        document.getElementById('m-date').innerText = data.targetDate; // 변경된 예정일
+        document.getElementById('m-original-date').innerText = data.originalDate;
+        document.getElementById('m-date').innerText = data.targetDate;
         document.getElementById('m-chamber').innerText = data.chamber_no || "-";
-        
         const startT = new Date(data.start_date).getTime();
         const targetT = new Date(data.targetDate).getTime();
         const validHistory = (data.deviation_history || []).filter(h => {
@@ -302,11 +299,35 @@
         refreshAll();
     }
 
+    // [보안 업데이트됨: deleteRow]
     async function deleteRow(id) {
         if(!confirm("삭제하시겠습니까?")) return;
-        if(prompt("비밀번호") === "Dsiscool86!") { await _supabase.from('stability_tests').delete().eq('id', id); refreshAll(); }
+        const inputPassword = prompt("관리자 비밀번호를 입력하세요.");
+        if (!inputPassword) return;
+
+        try {
+            // 서버 API 호출 (비밀번호 검증)
+            const response = await fetch('/api/check-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ password: inputPassword })
+            });
+            const result = await response.json();
+
+            if (result.success) {
+                await _supabase.from('stability_tests').delete().eq('id', id); 
+                alert("삭제 완료되었습니다.");
+                refreshAll(); 
+            } else {
+                alert("비밀번호가 일치하지 않습니다.");
+            }
+        } catch (e) {
+            console.error(e);
+            alert("보안 서버 통신 오류가 발생했습니다.");
+        }
     }
 
+    // [기존 함수들 유지]
     async function showChamberDeviationHistory() {
         const chamber = document.getElementById('deviationChamberSelect').value;
         if(!chamber) return alert("조회할 챔버를 선택해주세요.");
@@ -383,17 +404,14 @@
         document.getElementById('calcTableHead').innerHTML = `<th>안정성 시점</th><th>최초 예정일</th><th>최종 예정일</th><th>연장합계</th><th>일탈 사유</th><th>상세 일탈시점</th><th>일정등록</th>`;
         const tbody = document.querySelector('#calcTable tbody');
         tbody.innerHTML = '';
-        
         item.intervals.split(',').forEach(val => {
             let v = parseInt(val.trim()); if(isNaN(v)) return;
             const analysis = getAnalysis(item, v);
             const point = v === 0 ? 'Initial' : v + (item.unit === 'month' ? 'M' : 'W');
-            
             const pointDate = new Date(analysis.original);
             const filteredDevs = (item.deviation_history || []).filter(h => new Date(h.date) <= pointDate);
             const reasons = filteredDevs.map(h => h.reason || '사유 미입력').join(', ') || '-';
             const datesWithDays = filteredDevs.map(h => `${h.date} (+${h.days} Day)`).join(', ') || '-';
-
             tbody.innerHTML += `
                 <tr>
                     <td><b>${point}</b></td>
